@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>P-REC Avoided Emissions Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,600&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* delete the arrows in EF */
+    #projectEF::-webkit-inner-spin-button, #projectEF::-webkit-outer-spin-button,
+    #dieselEF::-webkit-inner-spin-button, #dieselEF::-webkit-outer-spin-button,
+    #gridEF::-webkit-inner-spin-button, #gridEF::-webkit-outer-spin-button,
+    #keroseneEF::-webkit-inner-spin-button, #keroseneEF::-webkit-outer-spin-button,
+    #candleEF::-webkit-inner-spin-button, #candleEF::-webkit-outer-spin-button,
+    #otherEF::-webkit-inner-spin-button, #otherEF::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    
+    #projectEF, #dieselEF, #gridEF, #keroseneEF, #candleEF, #otherEF {
+      -moz-appearance: textfield;
+    }
+  </style>
+</head>
+<body class="bg-white-50 text-gray-900 font-sans">
+
+<!-- =========================
+     HEADER
+======================== -->
+  <header class="bg-white py-12 px-6 md:px-12 border-b border-gray-200">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center md:items-start gap-8">
+      
+      <img src="https://images.squarespace-cdn.com/content/v1/5cc327c55acb9b00019d816a/1556293628038-RVEZR0CZ5OK185WVQ7BN/Energy_Peace_Partners_Logo_FinalX_Black_56fc689f-ee6c-405c-b90b-9049cd671979_x150.png" 
+           alt="Energy Peace Partners" 
+           class="h-16 md:h-20 mt-1" />
+      
+      <div class="text-center md:text-left">
+        <h1 class="text-3xl md:text-4xl font-serif text-brand-800 not-italic mb-2">
+          P-REC Avoided Emissions Calculator
+        </h1>
+        <p class="text-lg font-sans text-gray-500 not-italic">
+          Estimated climate benefits from P-REC procurement.
+        </p>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 md:px-12 py-10">
+<div class="mb-6 flex justify-end print:hidden">
+  <button
+    onclick="window.print()"
+    class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-md py-2 px-4 text-sm font-medium flex items-center gap-2 transition-colors"
+  >
+    <span>🖨️</span>
+    <span>Print / Save as PDF</span>
+  </button>
+</div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+
+<!-- =========================
+     Left Column: Inputs
+========================= -->
+      <section>
+        <h2 class="text-3xl font-serif font-bold mb-6 text-brand-800 not-italic">1. Project &amp; Buyer Inputs</h2>
+        <div class="space-y-5">
+
+          <!-- Input Mode Toggle -->
+     <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700 mb-2">
+      Input Mode
+      </label>
+     <select id="inputMode" class="w-full border rounded-md px-3 py-2">
+      <option value="budget">Use Budget ($)</option>
+      <option value="quantity">Use P-RECs Purchased (MWh)</option>
+      </select>
+      </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">P-REC Price ($/MWh)</label>
+              <select id="price" class="w-full rounded-md border border-gray-300 px-3 py-2 bg-white">
+                <option value="45">$45 (Standard P-RECs)</option>
+                <option value="23" selected>$23 (PAF P-RECs)</option>
+              </select>
+            </div>
+            <div id="budgetBlock">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Buyer Budget ($)</label>
+              <input id="budget" type="number" value="100000" class="w-full rounded-md border border-gray-300 px-3 py-2" />
+            </div>
+            <div id="quantityBlock" style="display:none;">
+              <label class="block text-sm font-medium text-gray-700 mb-1">P-RECs Purchased (MWh)</label>
+              <input id="manualQuantity" type="number" value="2000" class="w-full rounded-md border border-gray-300 px-3 py-2" />
+            </div>
+          </div>
+
+          <div class="pt-2 border-t-2 border-gray-100">
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Project Emission Factor (tCO2e/MWh)
+            </label>
+            <input type="text" 
+              value="0"
+              disabled
+              class="w-full rounded-md border border-gray-300 px-3 py-2 bg-gray-100 text-gray-700 cursor-not-allowed"/>
+            <input type="hidden" id="projectEF" value="0" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Displace %</label>
+              <input id="displace" type="number" value="100" class="w-full rounded-md border border-gray-300 px-3 py-2" />
+              <p class="text-xs text-gray-500 mt-1">Share of delivered renewable electricity assumed to displace the baseline source.</p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Delivery Confidence %</label>
+              <input id="consFactor" type="number" value="100" class="w-full rounded-md border border-gray-300 px-3 py-2" />
+              <p class="text-xs text-gray-500 mt-1">Confidence level that project delivers expected avoided emissions impact.</p>
+            </div>
+          </div>
+        </div>
+
+<h2 class="text-3xl font-serif font-bold mt-12 mb-2 text-brand-800 not-italic">2. Existing Off-Grid Baseline Mix (%)</h2>
+        <p class="text-sm text-gray-500 italic mb-6">* Note: "EF" stands for Emissions Factor (tCO2e/MWh).</p>
+
+        <div class="space-y-4">
+  <div class="grid grid-cols-1 md:grid-cols-[1fr_120px_160px] items-center gap-4">
+    <label class="font-medium text-gray-800">Diesel Generator</label>
+    <div class="relative">
+      <input id="dieselShare" type="number" value="70" class="w-full rounded-md border border-gray-300 px-3 py-2 pr-8" />
+      <span class="absolute right-3 top-2.5 text-gray-500 text-sm">%</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="text-sm text-gray-500">EF:</span>
+      <input id="dieselEF" type="number" step="0.001" value="0.9" class="w-full rounded-md border border-gray-300 px-3 py-2" />
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-[1fr_120px_160px] items-center gap-4">
+    <label class="font-medium text-gray-800">Kerosene</label>
+    <div class="relative">
+      <input id="keroseneShare" type="number" value="21" class="w-full rounded-md border border-gray-300 px-3 py-2 pr-8" />
+      <span class="absolute right-3 top-2.5 text-gray-500 text-sm">%</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="text-sm text-gray-500">EF:</span>
+      <input id="keroseneEF" type="number" step="0.001" value="0.15" class="w-full rounded-md border border-gray-300 px-3 py-2" />
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-[1fr_120px_160px] items-center gap-4">
+    <label class="font-medium text-gray-800">Candle / Wax</label>
+    <div class="relative">
+      <input id="candleShare" type="number" value="9" class="w-full rounded-md border border-gray-300 px-3 py-2 pr-8" />
+      <span class="absolute right-3 top-2.5 text-gray-500 text-sm">%</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="text-sm text-gray-500">EF:</span>
+      <input id="candleEF" type="number" step="0.001" value="0.245" class="w-full rounded-md border border-gray-300 px-3 py-2" />
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-[1fr_120px_160px] items-center gap-4">
+    <label class="font-medium text-gray-800">Other</label>
+    <div class="relative">
+      <input id="otherShare" type="number" value="0" class="w-full rounded-md border border-gray-300 px-3 py-2 pr-8" />
+      <span class="absolute right-3 top-2.5 text-gray-500 text-sm">%</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="text-sm text-gray-500">EF:</span>
+      <input id="otherEF" type="number" step="0.001" value="0" class="w-full rounded-md border border-gray-300 px-3 py-2" />
+    </div>
+  </div>
+</div>
+
+        <div id="baselineTotalBox"
+          class="mt-6 rounded-lg bg-green-100 text-green-800 px-4 py-4 text-center font-semibold text-xl">
+          Total Baseline Share: 100.0%
+        </div>
+      </section>
+
+ <!-- =========================
+     Right Column：results
+========================= -->
+      <section>
+        <h2 class="text-3xl font-serif font-bold mb-8 border-l-4 border-gray-300 pl-4 text-brand-800 not-italic">
+  Buyer Results (Impact Summary)
+</h2>
+
+<div class="space-y-8 mb-8">
+  <!-- Row 1 -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div>
+      <div class="text-sm text-gray-500 mb-2">P-RECs Purchased</div>
+      <div id="pRecsPurchased" class="text-4xl font-bold leading-tight text-gray-900">2,222</div>
+    </div>
+
+    <div>
+      <div class="text-sm text-gray-500 mb-2">Total Avoided Emissions</div>
+      <div id="avoidedEmissions" class="text-4xl font-bold leading-tight text-green-600">1,215.2 tCO2e</div>
+    </div>
+
+    <div>
+      <div class="text-sm text-gray-500 mb-2">Cost per tCO2e Avoided</div>
+      <div id="costPerTon" class="text-4xl font-bold leading-tight text-gray-900">$82.29</div>
+    </div>
+  </div>
+
+  <!-- Row 2 -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div>
+      <div class="text-sm text-gray-500 mb-2">Avoided Emissions per P-REC</div>
+      <div id="avoidedPerPRec" class="text-3xl font-bold leading-tight text-gray-900">0 tCO2e/MWh</div>
+    </div>
+
+    <div>
+      <div class="text-sm text-gray-500 mb-2">Avoided Emissions per $1,000 Spent</div>
+      <div id="avoidedPerDollar" class="text-3xl font-bold leading-tight text-gray-900">0 tCO2e</div>
+    </div>
+  </div>
+</div>
+
+        <div class="border border-amber-500 bg-transparent px-5 py-5 text-amber-900 mb-8">
+          <p class="text-lg leading-relaxed">
+            <span class="font-bold">Methodological Note:</span>
+            P-RECs are energy attribute certificates, not carbon offsets.
+            Avoided emissions should be reported separately from Scope 2 market-based emissions
+            and disclosed with baseline assumptions.
+          </p>
+        </div>
+
+        <details class="border border-gray-300 bg-transparent px-5 py-4 shadow-sm">
+  <summary class="cursor-pointer text-lg font-bold text-brand-800 not-italic font-serif">
+    Assumptions &amp; Calculation Details
+  </summary>
+  <div class="mt-4 text-sm text-gray-600 space-y-3 leading-6 font-sans">
+    <p>This tool applies a simplified buyer-side avoided emissions methodology using user-entered baseline shares, baseline emission factors, delivery assumptions, displacement assumptions, and a conservative adjustment factor.</p>
+    <p>Baseline emissions are estimated as a weighted average of the selected existing off-grid energy sources.</p>
+    <p>Estimated avoided emissions = P-RECs Purchased &times; Delivery Factor &times; Displacement Factor &times; Conservative Factor &times; (Baseline Emission Factor &minus; Project Emission Factor)</p>
+    <p>Results are indicative only and should be disclosed together with the assumptions used.</p>
+    
+    <hr class="my-4 border-gray-200" />
+    <h4 class="font-bold text-gray-800">Data Sources &amp; References:</h4>
+    <ul class="list-disc pl-5 space-y-2">
+      <li>
+        <span class="font-semibold">Baseline Assumptions:</span> The 100% diesel baseline (and related off-grid energy assumptions) is informed by the 
+        <a href="https://documents1.worldbank.org/curated/en/167861617328904373/pdf/Ethiopia-Access-to-Distributed-Electricity-and-Lighting-in-Ethiopia-ADELE-Project.pdf" target="_blank" class="text-brand-600 hover:text-brand-800 underline transition-colors">
+          World Bank ADELE Project document
+        </a>.
+      </li>
+      <li>
+        <span class="font-semibold">Emission Factors:</span> Values for generator fuels (diesel), kerosene, and candle/paraffin are sourced from the 
+        <a href="https://www.epa.gov/climateleadership/ghg-emission-factors-hub" target="_blank" class="text-brand-600 hover:text-brand-800 underline transition-colors">
+          EPA GHG Emission Factors Hub
+        </a>.
+      </li>
+    </ul>
+  </div>
+</details>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    function formatNumber(value, decimals = 0) {
+      return Number(value).toLocaleString(undefined, {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+      });
+    }
+
+    function calculate() {
+  const budget = parseFloat(document.getElementById("budget").value) || 0;
+  const price = parseFloat(document.getElementById("price").value) || 0;
+  const projectEF = parseFloat(document.getElementById("projectEF").value) || 0;
+
+  const delivery = 1;
+  const displace = (parseFloat(document.getElementById("displace").value) || 0) / 100;
+  const consFactor = (parseFloat(document.getElementById("consFactor").value) || 0) / 100;
+
+// 1. Extract all Shares (Grid removed)
+  const dieselShare = parseFloat(document.getElementById("dieselShare").value) || 0;
+  const keroseneShare = parseFloat(document.getElementById("keroseneShare").value) || 0;
+  const candleShare = parseFloat(document.getElementById("candleShare").value) || 0;
+  const otherShare = parseFloat(document.getElementById("otherShare").value) || 0;
+
+  // 2. Extract all EFs (Grid removed)
+  const dieselEF = parseFloat(document.getElementById("dieselEF").value) || 0;
+  const keroseneEF = parseFloat(document.getElementById("keroseneEF").value) || 0;
+  const candleEF = parseFloat(document.getElementById("candleEF").value) || 0;
+  const otherEF = parseFloat(document.getElementById("otherEF").value) || 0;
+
+  // Total Share
+  const totalShare = dieselShare + keroseneShare + candleShare + otherShare;
+
+  document.getElementById("baselineTotalBox").textContent =
+    `Total Baseline Share: ${formatNumber(totalShare, 1)}%`;
+
+  const sharesValid = totalShare > 0;
+
+  // 3. Calculate the baseline using dynamically extracted EFs
+  const baselineEF = sharesValid
+    ? (
+        (dieselShare / totalShare) * dieselEF +
+        (keroseneShare / totalShare) * keroseneEF +
+        (candleShare / totalShare) * candleEF +
+        (otherShare / totalShare) * otherEF
+      )
+    : 0;
+
+  // 1. Determine P-RECs purchased based on Mode
+  let pRecsPurchased = 0;
+  const inputMode = document.getElementById("inputMode").value;
+
+  if (inputMode === "budget") {
+    pRecsPurchased = price > 0 ? (budget / price) : 0;
+  } else {
+    pRecsPurchased = parseFloat(document.getElementById("manualQuantity").value) || 0;
+  }
+
+  // 2. Core Math
+  const effectiveMWh = pRecsPurchased * delivery * displace * consFactor;
+  const avoidedPerMWh = Math.max(0, baselineEF - projectEF);
+  const totalAvoided = effectiveMWh * avoidedPerMWh;
+
+  // 3. Determine true total spend (Fixing the Point 5 bug)
+  const currentTotalCost = (inputMode === "budget") ? budget : (pRecsPurchased * price);
+
+  // 4. Calculate metrics using the dynamic cost
+  const costPerTon = totalAvoided > 0 ? currentTotalCost / totalAvoided : 0;
+  const perPRec = pRecsPurchased > 0 ? totalAvoided / pRecsPurchased : 0;
+  const perThousandDollars = currentTotalCost > 0 ? (totalAvoided / currentTotalCost) * 1000 : 0;
+
+  // 5. Update UI
+  document.getElementById("pRecsPurchased").textContent = formatNumber(pRecsPurchased, 0);
+  document.getElementById("avoidedEmissions").textContent = `${formatNumber(totalAvoided, 1)} tCO2e`;
+  document.getElementById("costPerTon").textContent = totalAvoided > 0 ? `$${formatNumber(costPerTon, 2)}` : "N/A";
+  document.getElementById("avoidedPerPRec").textContent = `${formatNumber(perPRec, 3)} tCO2e/MWh`;
+  document.getElementById("avoidedPerDollar").textContent = `${formatNumber(perThousandDollars, 3)} tCO2e`;
+
+  // 6. Alert Box styling
+      const totalBox = document.getElementById("baselineTotalBox");
+      if (Math.abs(totalShare - 100) > 0.01) {
+        totalBox.className = "mt-6 rounded-lg bg-yellow-100 text-yellow-800 px-4 py-4 text-center font-semibold text-xl font-serif";
+      } else {
+        totalBox.className = "mt-6 rounded-lg bg-green-100 text-green-800 px-4 py-4 text-center font-semibold text-xl font-serif";
+      }
+}
+
+
+    const inputModeEl = document.getElementById("inputMode");
+    const budgetBlock = document.getElementById("budgetBlock");
+    const quantityBlock = document.getElementById("quantityBlock");
+
+    function updateInputMode() {
+      if (inputModeEl.value === "budget") {
+        budgetBlock.style.display = "block";
+        quantityBlock.style.display = "none";
+      } else {
+        budgetBlock.style.display = "none";
+        quantityBlock.style.display = "block";
+      }
+    }
+
+    inputModeEl.addEventListener("change", () => {
+      updateInputMode();
+      calculate();
+    });
+
+    updateInputMode();
+
+    document.querySelectorAll("input, select").forEach(input => {
+      input.addEventListener("input", calculate);
+    });
+
+    calculate();
+  </script>
+</body>
+</html>
