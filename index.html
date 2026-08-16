@@ -632,7 +632,7 @@
     const budget10 = target10 * internalCarbonPrice;
     const budget40 = target40 * internalCarbonPrice;
 
-    // 3. Translate to P-RECs (向下取整 Floor 以确保不超预算)
+    // 3. Translate to P-RECs (Round down to ensure budget is not exceeded)
     const pRecs1 = Math.floor(budget1 / price);
     const pRecs10 = Math.floor(budget10 / price);
     const pRecs40 = Math.floor(budget40 / price);
